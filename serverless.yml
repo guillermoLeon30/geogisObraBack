@@ -1,0 +1,36 @@
+service:
+  name: geogis-avance-obra
+# app and org for use with dashboard.serverless.com
+#app: your-app-name
+#org: your-org-name
+
+custom:
+  dotenv:
+    basePath: ./config/
+  stage: ${env:STAGE}
+  region: ${env:REGION}
+  prod:
+    GATEWAY_URL: { "Fn::Join" : ["", [ "http://", { "Ref" : "ApiGatewayRestApi" }, ".execute-api.${self:custom.region}.amazonaws.com/${self:custom.stage}" ] ]  }
+  dev:
+    GATEWAY_URL: "http://localhost:3000"
+
+# Add the serverless-webpack plugin
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-dotenv-plugin
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stage: ${self:custom.stage}
+  region: ${self:custom.region}
+  enviroment:
+    GATEWAY_URL: ${self:custom.${self:custom.stage}.GATEWAY_URL}
+
+functions:
+  app:
+    handler: handler.generic
+    events:
+      - http: ANY /
+      - http: ANY {any+}
